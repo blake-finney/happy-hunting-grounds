@@ -41,230 +41,227 @@
 		teams = data;
 	})];
 	
-	window.onload = function(){
-		// Window has loaded, execute requests for data
-		Promise.all(requests).then(returned_data => {
-			// Set players
-			var players_dataset = $("#allPremPlayers");
-			for (const [key, data] of Object.entries(players)) {
-				// Add player to datset
-				players_dataset.append('<option value="'+data.displayName+'" data-playerid="'+data.id+'" data-optaid="'+data.optaId+'">')
+	Promise.all(requests).then(returned_data => {
+		// Set players
+		var players_dataset = $("#allPremPlayers");
+		for (const [key, data] of Object.entries(players)) {
+			// Add player to datset
+			players_dataset.append('<option value="'+data.displayName+'" data-playerid="'+data.id+'" data-optaid="'+data.optaId+'">')
+		}
+		function get_fixture_for_difficulty (level){
+			var level_answers = Object.fromEntries(
+				Object.entries(answers).filter(
+					([key, val])=>val.difficulty_score===Number(level)
+				)
+			);
+			var level_combos = Object.keys(level_answers);
+			return level_combos[Math.floor(Math.random() * level_combos.length)];
+		};
+		// Get rounds ready
+		$("form#playRound1").on("submit", function () {
+			// Initialise first round
+			var selected_fixture = get_fixture_for_difficulty($("form#playRound1 .level-select").val());
+			var fixture_split = selected_fixture.split('_');
+			$("#questionTeam").text(teams["team-"+fixture_split[1]].name);
+			$("form#answerSubmission #team").val(fixture_split[1]);
+			$("#questionGround").text(grounds[fixture_split[0]].name);
+			$("form#answerSubmission #ground").val(fixture_split[0]);
+			$("form#answerSubmission #roundNumber").val(1);
+			$("form#answerSubmission #levelScore").val($("form#playRound1 .level-select").val());
+			$("#roundPlayer").modal("show");
+		});
+		
+		$("#playRound2").on("submit", function () {
+			//Reset round
+			reset_round();
+			// Initialise second round
+			var selected_fixture = get_fixture_for_difficulty($("form#playRound2 .level-select").val());
+			var fixture_split = selected_fixture.split('_');
+			$("#questionTeam").text(teams["team-"+fixture_split[1]].name);
+			$("form#answerSubmission #team").val(fixture_split[1]);
+			$("#questionGround").text(grounds[fixture_split[0]].name);
+			$("form#answerSubmission #ground").val(fixture_split[0]);
+			$("form#answerSubmission #roundNumber").val(2);
+			$("form#answerSubmission #levelScore").val($("form#playRound2 .level-select").val());
+			$("#modelHeadRoundNo").text("2");
+			$("#roundPlayer").modal("show");
+			$("#Round2Card .level-play").toggleClass("disabled",true);
+		});
+		
+		$("#playRound3").on("submit", function () {
+			// Reset round
+			reset_round();
+			// Initialise third round
+			var selected_fixture = get_fixture_for_difficulty($("form#playRound3 .level-select").val());
+			var fixture_split = selected_fixture.split('_');
+			$("#questionTeam").text(teams["team-"+fixture_split[1]].name);
+			$("form#answerSubmission #team").val(fixture_split[1]);
+			$("#questionGround").text(grounds[fixture_split[0]].name);
+			$("form#answerSubmission #ground").val(fixture_split[0]);
+			$("form#answerSubmission #roundNumber").val(3);
+			$("form#answerSubmission #levelScore").val($("form#playRound3 .level-select").val());
+			$("#modelHeadRoundNo").text("3");
+			$("#roundPlayer").modal("show");
+			$("#Round3Card .level-play").toggleClass("disabled",true);
+		});
+		
+		// Set up player thumbnail when player is changed
+		$("#playerSelect").on("change", function () {
+			var player_in_datalist = $("#allPremPlayers option[value='"+$("#playerSelect").val()+"']");
+			if (player_in_datalist.length) {
+				var player_image_url = "https://resources.premierleague.com/premierleague/photos/players/250x250/"+player_in_datalist.data("optaid")+".png";
+				$("#selectedPlayerImage").attr("src",player_image_url);
+				$("#playerSelect").toggleClass("is-invalid",false);
+			} else {
+				// Invalid player name, show validation error
+				$("#selectedPlayerImage").attr("src","https://resources.premierleague.com/premierleague/photos/players/250x250/Photo-Missing.png");
+				$("#playerSelect").toggleClass("is-invalid",true);
 			}
-			function get_fixture_for_difficulty (level){
-				var level_answers = Object.fromEntries(
-					Object.entries(answers).filter(
-						([key, val])=>val.difficulty_score===Number(level)
-					)
-				);
-				var level_combos = Object.keys(level_answers);
-				return level_combos[Math.floor(Math.random() * level_combos.length)];
-			};
-			// Get rounds ready
-			$("form#playRound1").on("submit", function () {
-				// Initialise first round
-				var selected_fixture = get_fixture_for_difficulty($("form#playRound1 .level-select").val());
-				var fixture_split = selected_fixture.split('_');
-				$("#questionTeam").text(teams["team-"+fixture_split[1]].name);
-				$("form#answerSubmission #team").val(fixture_split[1]);
-				$("#questionGround").text(grounds[fixture_split[0]].name);
-				$("form#answerSubmission #ground").val(fixture_split[0]);
-				$("form#answerSubmission #roundNumber").val(1);
-				$("form#answerSubmission #levelScore").val($("form#playRound1 .level-select").val());
-				$("#roundPlayer").modal("show");
-			});
-			
-			$("#playRound2").on("submit", function () {
-				//Reset round
-				reset_round();
-				// Initialise second round
-				var selected_fixture = get_fixture_for_difficulty($("form#playRound2 .level-select").val());
-				var fixture_split = selected_fixture.split('_');
-				$("#questionTeam").text(teams["team-"+fixture_split[1]].name);
-				$("form#answerSubmission #team").val(fixture_split[1]);
-				$("#questionGround").text(grounds[fixture_split[0]].name);
-				$("form#answerSubmission #ground").val(fixture_split[0]);
-				$("form#answerSubmission #roundNumber").val(2);
-				$("form#answerSubmission #levelScore").val($("form#playRound2 .level-select").val());
-				$("#modelHeadRoundNo").text("2");
-				$("#roundPlayer").modal("show");
-				$("#Round2Card .level-play").toggleClass("disabled",true);
-			});
-			
-			$("#playRound3").on("submit", function () {
-				// Reset round
-				reset_round();
-				// Initialise third round
-				var selected_fixture = get_fixture_for_difficulty($("form#playRound3 .level-select").val());
-				var fixture_split = selected_fixture.split('_');
-				$("#questionTeam").text(teams["team-"+fixture_split[1]].name);
-				$("form#answerSubmission #team").val(fixture_split[1]);
-				$("#questionGround").text(grounds[fixture_split[0]].name);
-				$("form#answerSubmission #ground").val(fixture_split[0]);
-				$("form#answerSubmission #roundNumber").val(3);
-				$("form#answerSubmission #levelScore").val($("form#playRound3 .level-select").val());
-				$("#modelHeadRoundNo").text("3");
-				$("#roundPlayer").modal("show");
-				$("#Round3Card .level-play").toggleClass("disabled",true);
-			});
-			
-			// Set up player thumbnail when player is changed
-			$("#playerSelect").on("change", function () {
-				var player_in_datalist = $("#allPremPlayers option[value='"+$("#playerSelect").val()+"']");
-				if (player_in_datalist.length) {
-					var player_image_url = "https://resources.premierleague.com/premierleague/photos/players/250x250/"+player_in_datalist.data("optaid")+".png";
-					$("#selectedPlayerImage").attr("src",player_image_url);
-					$("#playerSelect").toggleClass("is-invalid",false);
-				} else {
-					// Invalid player name, show validation error
-					$("#selectedPlayerImage").attr("src","https://resources.premierleague.com/premierleague/photos/players/250x250/Photo-Missing.png");
-					$("#playerSelect").toggleClass("is-invalid",true);
-				}
-			});
-			
-			// Player and year combo is selected
-			$("form#answerSubmission").submit(function(){
-				var round_points = null;
-				var points_class = "";
-				var team_id = $("form#answerSubmission #team").val();
-				var stadium_slug = $("form#answerSubmission #ground").val();
-				var season_id = $("#seasonSelect").val();
-				var player_id = $("#allPremPlayers option[value='"+$("#playerSelect").val()+"']").data("playerid");
-				// Show answer details
-				$("#answerContainer").toggleClass("d-none",false);
-				// Check season selected
-				if (!((stadium_slug + "_" + team_id) in answers)){
-					// Team has never played at that stadium.. should never happen...
-					round_points = 0;
-					points_class = "bg-danger-subtle";
-				} else if (!(("season-" + season_id) in answers[stadium_slug + "_" + team_id].seasons)) {
-					// Team has not played at that stadium in that season
-					$("#goalscorersHeader").text($("#questionTeam").text() + " did not play a Premier League fixture at " + $("#questionGround").text() + " in " + $("#seasonSelect option:selected").text());
-				} else {
-					// Team played there that season, so did deeper
-					var fixture_data = answers[stadium_slug + "_" + team_id].seasons["season-" + season_id];
-					$("#answerScoreline").text(fixture_data.scoreline);
-					$("#answerDate").text(fixture_data.date);
-					if (fixture_data.away_goalscorers.length) {
-						// Away team had goalscorers, check if player ID is in the array
-						for (var i = 0; i < fixture_data.away_goalscorers.length; i++){
-							var goalscorer = fixture_data.away_goalscorers[i];
-							if(player_id === goalscorer.id){
-								// Selected player did score
-								round_points = Number($("form#answerSubmission #levelScore").val());
-								points_class = "alert-success";
-								$("#answerGoalscorers").append('<p class="mb-0"><strong>'+players["player-" + goalscorer.id].displayName+ ((goalscorer.penalty) ? '(p)' : '') + ' ('+goalscorer.minute+')</strong></p>');
-							} else if (goalscorer.id.toString().indexOf('OG-')===0) {
-								// If goal is an own goal, display differently
-								$("#answerGoalscorers").append('<p class="mb-0"><i>'+players["player-" + goalscorer.id.replace('OG-','')].displayName+' OG ('+goalscorer.minute+')</i></p>');
+		});
+		
+		// Player and year combo is selected
+		$("form#answerSubmission").submit(function(){
+			var round_points = null;
+			var points_class = "";
+			var team_id = $("form#answerSubmission #team").val();
+			var stadium_slug = $("form#answerSubmission #ground").val();
+			var season_id = $("#seasonSelect").val();
+			var player_id = $("#allPremPlayers option[value='"+$("#playerSelect").val()+"']").data("playerid");
+			// Show answer details
+			$("#answerContainer").toggleClass("d-none",false);
+			// Check season selected
+			if (!((stadium_slug + "_" + team_id) in answers)){
+				// Team has never played at that stadium.. should never happen...
+				round_points = 0;
+				points_class = "bg-danger-subtle";
+			} else if (!(("season-" + season_id) in answers[stadium_slug + "_" + team_id].seasons)) {
+				// Team has not played at that stadium in that season
+				$("#goalscorersHeader").text($("#questionTeam").text() + " did not play a Premier League fixture at " + $("#questionGround").text() + " in " + $("#seasonSelect option:selected").text());
+			} else {
+				// Team played there that season, so did deeper
+				var fixture_data = answers[stadium_slug + "_" + team_id].seasons["season-" + season_id];
+				$("#answerScoreline").text(fixture_data.scoreline);
+				$("#answerDate").text(fixture_data.date);
+				if (fixture_data.away_goalscorers.length) {
+					// Away team had goalscorers, check if player ID is in the array
+					for (var i = 0; i < fixture_data.away_goalscorers.length; i++){
+						var goalscorer = fixture_data.away_goalscorers[i];
+						if(player_id === goalscorer.id){
+							// Selected player did score
+							round_points = Number($("form#answerSubmission #levelScore").val());
+							points_class = "alert-success";
+							$("#answerGoalscorers").append('<p class="mb-0"><strong>'+players["player-" + goalscorer.id].displayName+ ((goalscorer.penalty) ? '(p)' : '') + ' ('+goalscorer.minute+')</strong></p>');
+						} else if (goalscorer.id.toString().indexOf('OG-')===0) {
+							// If goal is an own goal, display differently
+							$("#answerGoalscorers").append('<p class="mb-0"><i>'+players["player-" + goalscorer.id.replace('OG-','')].displayName+' OG ('+goalscorer.minute+')</i></p>');
+						} else {
+							if ("player-" + goalscorer.id in players){
+								$("#answerGoalscorers").append('<p class="mb-0">'+players["player-" + goalscorer.id].displayName+ ((goalscorer.penalty) ? ' (p)' : '') + ' ('+goalscorer.minute+')</p>');
 							} else {
-								if ("player-" + goalscorer.id in players){
-									$("#answerGoalscorers").append('<p class="mb-0">'+players["player-" + goalscorer.id].displayName+ ((goalscorer.penalty) ? ' (p)' : '') + ' ('+goalscorer.minute+')</p>');
-								} else {
-									// Rare edge cases where goalscorer ID doesn't have a player associated
-									$("#answerGoalscorers").append("<p class=\"mb-0\">Error! Couldn't find Player ID " + goalscorer.id + "</p>");
-								}
+								// Rare edge cases where goalscorer ID doesn't have a player associated
+								$("#answerGoalscorers").append("<p class=\"mb-0\">Error! Couldn't find Player ID " + goalscorer.id + "</p>");
 							}
 						}
-					} else {
-						// Away team no goalscorers
 					}
-				}
-				
-				if (round_points === null) {
-					// If we haven't set round points, check previous season data
-					if (("player-"+player_id+"_team-"+team_id) in grounds[stadium_slug].away_goalscorers){
-						// Player has scored there in another season
-						round_points = Number($("form#answerSubmission #levelScore").val())/2;
-						points_class = "alert-info";
-						// Display other seasons they scored in, sorted oldest season to most recent
-						var other_seasons = grounds[stadium_slug].away_goalscorers["player-"+player_id+"_team-"+team_id];
-						other_seasons.sort(function(a, b){return a - b});
-						other_seasons = other_seasons.map(x => $('#seasonSelect option[value="'+x+'"]').text());
-						$("#otherSeasonsScored").text("Seasons " + $("#playerSelect").val() +" scored for "+$("#questionTeam").text()+" at " +$("#questionGround").text()+ " in the Premier League: " + other_seasons.join(", "));
-					} else {
-						// Player has not scored at that ground for that team, no points
-						round_points = 0;
-						points_class = "alert-warning";
-						$("#otherSeasonsScored").text($("#playerSelect").val() + " has never scored for " + $("#questionTeam").text() + " at " + $("#questionGround").text() + " in the Premier League.");
-					}
-				}
-				$("#pointsContainer").toggleClass(points_class,true);
-				$("#pointsScored").text(round_points);
-				$("#playerSelect").prop("disabled",true);
-				$("#seasonSelect").prop("disabled",true);
-				// Now update the main screen
-				var card = $("#Round"+$("form#answerSubmission #roundNumber").val()+"Card");
-				card.find(".card-img-top").attr("src",$("#selectedPlayerImage").attr("src"));
-				card.find(".question").text($("#questionTeam").text() + " at " + $("#questionGround").text());
-				card.find(".guess strong").text("Your guess: " + $("#playerSelect").val() + ", " + $("#seasonSelect option:selected").text());
-				card.find(".score").text("Score: " + $("#pointsScored").text()).toggleClass(points_class,true);
-				card.find("#playRound" + $("form#answerSubmission #roundNumber").val() + " button").toggleClass("d-none",true);
-				card.find("#playRound" + $("form#answerSubmission #roundNumber").val() + " select").prop("disabled",true);
-				// Increment total Score
-				$("#totalScore").text(Number($("#totalScore").text()) + Number($("#pointsScored").text()));
-				// Update share modal
-				var share_row = $("#shareRowRound"+$("form#answerSubmission #roundNumber").val());
-				share_row.find(".share_row_image").attr("src",$("#selectedPlayerImage").attr("src"));
-				share_row.find(".share_row_level").text("Level " + $("form#answerSubmission #levelScore").val());
-				share_row.find(".share_row_question").text($("#questionTeam").text() + " at " + $("#questionGround").text());
-				share_row.find(".share_row_guess").text($("#playerSelect").val() + ", " + $("#seasonSelect option:selected").text());
-				share_row.find(".share_row_score").text($("#pointsScored").text()).toggleClass(points_class,true);
-				$("#shareScoreTotal").text($("#totalScore").text());
-				// Hide play button, and reveal close button
-				$("#submitAnswer").toggleClass("d-none",true);
-				$("#closeAnswer").toggleClass("d-none",false);
-				// If Round 1 or 2, prepare next round
-				if (Number($("form#answerSubmission #roundNumber").val()) < 3) {
-					$("#playRound" + (Number($("form#answerSubmission #roundNumber").val())+1).toString() + " button").toggleClass("disabled",false);
-					$("#playRound" + (Number($("form#answerSubmission #roundNumber").val())+1).toString() + " select").prop("disabled",false);
 				} else {
-					// Round 3, so show Scorecard and Restart buttons
-					$("#showScorecard").toggleClass("d-none", false);
-					$("#restartGame").toggleClass("d-none", false);
+					// Away team no goalscorers
 				}
-				
-			});
+			}
 			
-			$("#scorecardSpoilers").on("change", function (event) {
-				if (event.target.checked){
-					// If checked, show answers
-					$(".share_row_image").each(function(index, img){
-						$(img).attr("src",$(img).attr("data-player-image"));
-					});
-					$(".share_row_guess").toggleClass("placeholder",false).toggleClass("placeholder-wave",false);
+			if (round_points === null) {
+				// If we haven't set round points, check previous season data
+				if (("player-"+player_id+"_team-"+team_id) in grounds[stadium_slug].away_goalscorers){
+					// Player has scored there in another season
+					round_points = Number($("form#answerSubmission #levelScore").val())/2;
+					points_class = "alert-info";
+					// Display other seasons they scored in, sorted oldest season to most recent
+					var other_seasons = grounds[stadium_slug].away_goalscorers["player-"+player_id+"_team-"+team_id];
+					other_seasons.sort(function(a, b){return a - b});
+					other_seasons = other_seasons.map(x => $('#seasonSelect option[value="'+x+'"]').text());
+					$("#otherSeasonsScored").text("Seasons " + $("#playerSelect").val() +" scored for "+$("#questionTeam").text()+" at " +$("#questionGround").text()+ " in the Premier League: " + other_seasons.join(", "));
 				} else {
-					// If unchecked, hide spoilers; store original image in data attribute to recover later
-					$(".share_row_image").each(function(index, img){
-						$(img).attr("data-player-image",$(img).attr("src"));
-					});
-					$(".share_row_image").attr("src","https://resources.premierleague.com/premierleague/photos/players/250x250/Photo-Missing.png");
-					$(".share_row_guess").toggleClass("placeholder",true).toggleClass("placeholder-wave",true);
+					// Player has not scored at that ground for that team, no points
+					round_points = 0;
+					points_class = "alert-warning";
+					$("#otherSeasonsScored").text($("#playerSelect").val() + " has never scored for " + $("#questionTeam").text() + " at " + $("#questionGround").text() + " in the Premier League.");
 				}
-			});
+			}
+			$("#pointsContainer").toggleClass(points_class,true);
+			$("#pointsScored").text(round_points);
+			$("#playerSelect").prop("disabled",true);
+			$("#seasonSelect").prop("disabled",true);
+			// Now update the main screen
+			var card = $("#Round"+$("form#answerSubmission #roundNumber").val()+"Card");
+			card.find(".card-img-top").attr("src",$("#selectedPlayerImage").attr("src"));
+			card.find(".question").text($("#questionTeam").text() + " at " + $("#questionGround").text());
+			card.find(".guess strong").text("Your guess: " + $("#playerSelect").val() + ", " + $("#seasonSelect option:selected").text());
+			card.find(".score").text("Score: " + $("#pointsScored").text()).toggleClass(points_class,true);
+			card.find("#playRound" + $("form#answerSubmission #roundNumber").val() + " button").toggleClass("d-none",true);
+			card.find("#playRound" + $("form#answerSubmission #roundNumber").val() + " select").prop("disabled",true);
+			// Increment total Score
+			$("#totalScore").text(Number($("#totalScore").text()) + Number($("#pointsScored").text()));
+			// Update share modal
+			var share_row = $("#shareRowRound"+$("form#answerSubmission #roundNumber").val());
+			share_row.find(".share_row_image").attr("src",$("#selectedPlayerImage").attr("src"));
+			share_row.find(".share_row_level").text("Level " + $("form#answerSubmission #levelScore").val());
+			share_row.find(".share_row_question").text($("#questionTeam").text() + " at " + $("#questionGround").text());
+			share_row.find(".share_row_guess").text($("#playerSelect").val() + ", " + $("#seasonSelect option:selected").text());
+			share_row.find(".share_row_score").text($("#pointsScored").text()).toggleClass(points_class,true);
+			$("#shareScoreTotal").text($("#totalScore").text());
+			// Hide play button, and reveal close button
+			$("#submitAnswer").toggleClass("d-none",true);
+			$("#closeAnswer").toggleClass("d-none",false);
+			// If Round 1 or 2, prepare next round
+			if (Number($("form#answerSubmission #roundNumber").val()) < 3) {
+				$("#playRound" + (Number($("form#answerSubmission #roundNumber").val())+1).toString() + " button").toggleClass("disabled",false);
+				$("#playRound" + (Number($("form#answerSubmission #roundNumber").val())+1).toString() + " select").prop("disabled",false);
+			} else {
+				// Round 3, so show Scorecard and Restart buttons
+				$("#showScorecard").toggleClass("d-none", false);
+				$("#restartGame").toggleClass("d-none", false);
+			}
 			
-			$("#restartGame").on("click",function(){
-				// Reset answer modal
-				reset_round();
-				// Clear old answers
-				$(".main-screen-photo").attr("src","https://resources.premierleague.com/premierleague/photos/players/250x250/Photo-Missing.png");
-				$(".level-select").val("");
-				$("form .score").html("").toggleClass("alert-success",false).toggleClass("alert-info",false).toggleClass("alert-warning",false);
-				$(".round-score .question").text("");
-				$(".round-score .guess strong").text("");
-				$(".share_row_score").toggleClass("alert-success",false).toggleClass("alert-info",false).toggleClass("alert-warning",false);
-				// Clear total score
-				$("#totalScore").text("0");
-				// Re-enable Round 1
-				$("#Round1Card select").prop("disabled",false);
-				$("#Round1Card button").prop("disabled",false).toggleClass("d-none",false);
-				// Re-enable Round 2 and 3 buttons
-				// Remove Scorecard and Restart buttons
-				$("#Round2Card button, #Round3Card button").toggleClass("d-none",false);
-				$("#showScorecard").toggleClass("d-none", true);
-				$("#restartGame").toggleClass("d-none", true);
-			});
 		});
-	};
+		
+		$("#scorecardSpoilers").on("change", function (event) {
+			if (event.target.checked){
+				// If checked, show answers
+				$(".share_row_image").each(function(index, img){
+					$(img).attr("src",$(img).attr("data-player-image"));
+				});
+				$(".share_row_guess").toggleClass("placeholder",false).toggleClass("placeholder-wave",false);
+			} else {
+				// If unchecked, hide spoilers; store original image in data attribute to recover later
+				$(".share_row_image").each(function(index, img){
+					$(img).attr("data-player-image",$(img).attr("src"));
+				});
+				$(".share_row_image").attr("src","https://resources.premierleague.com/premierleague/photos/players/250x250/Photo-Missing.png");
+				$(".share_row_guess").toggleClass("placeholder",true).toggleClass("placeholder-wave",true);
+			}
+		});
+		
+		$("#restartGame").on("click",function(){
+			// Reset answer modal
+			reset_round();
+			// Clear old answers
+			$(".main-screen-photo").attr("src","https://resources.premierleague.com/premierleague/photos/players/250x250/Photo-Missing.png");
+			$(".level-select").val("");
+			$("form .score").html("").toggleClass("alert-success",false).toggleClass("alert-info",false).toggleClass("alert-warning",false);
+			$(".round-score .question").text("");
+			$(".round-score .guess strong").text("");
+			$(".share_row_score").toggleClass("alert-success",false).toggleClass("alert-info",false).toggleClass("alert-warning",false);
+			// Clear total score
+			$("#totalScore").text("0");
+			// Re-enable Round 1
+			$("#Round1Card select").prop("disabled",false);
+			$("#Round1Card button").prop("disabled",false).toggleClass("d-none",false);
+			// Re-enable Round 2 and 3 buttons
+			// Remove Scorecard and Restart buttons
+			$("#Round2Card button, #Round3Card button").toggleClass("d-none",false);
+			$("#showScorecard").toggleClass("d-none", true);
+			$("#restartGame").toggleClass("d-none", true);
+		});
+	});
 	</script>
   </head>
   <body style="background:linear-gradient(0deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url(football_pitch.jpg); background-size: cover; background-position: center;">
