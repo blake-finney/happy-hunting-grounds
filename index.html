@@ -123,7 +123,8 @@
 		});
 		
 		// Player and year combo is selected
-		$("form#answerSubmission").submit(function(){
+		$("form#answerSubmission").submit(function(e){
+			e.preventDefault();
 			var round_points = null;
 			var points_class = "";
 			var team_id = $("form#answerSubmission #team").val();
