@@ -43,7 +43,7 @@
 	
 	window.onload = function(){
 		// Window has loaded, execute requests for data
-		Promise.all(requests).then(data => {
+		Promise.all(requests).then(returned_data => {
 			// Set players
 			var players_dataset = $("#allPremPlayers");
 			for (const [key, data] of Object.entries(players)) {
