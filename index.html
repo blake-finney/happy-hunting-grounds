@@ -58,7 +58,8 @@
 			return level_combos[Math.floor(Math.random() * level_combos.length)];
 		};
 		// Get rounds ready
-		$("form#playRound1").on("submit", function () {
+		$("form#playRound1").on("submit", function (e) {
+			e.preventDefault();
 			// Initialise first round
 			var selected_fixture = get_fixture_for_difficulty($("form#playRound1 .level-select").val());
 			var fixture_split = selected_fixture.split('_');
@@ -71,7 +72,8 @@
 			$("#roundPlayer").modal("show");
 		});
 		
-		$("#playRound2").on("submit", function () {
+		$("#playRound2").on("submit", function (e) {
+			e.preventDefault();
 			//Reset round
 			reset_round();
 			// Initialise second round
@@ -88,7 +90,8 @@
 			$("#Round2Card .level-play").toggleClass("disabled",true);
 		});
 		
-		$("#playRound3").on("submit", function () {
+		$("#playRound3").on("submit", function (e) {
+			e.preventDefault();
 			// Reset round
 			reset_round();
 			// Initialise third round
