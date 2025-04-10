@@ -70,6 +70,7 @@
 			$("form#answerSubmission #ground").val(fixture_split[0]);
 			$("form#answerSubmission #roundNumber").val(1);
 			$("form#answerSubmission #levelScore").val($("form#playRound1 .level-select").val());
+			$("#submitAnswer").toggleClass("disabled",true);
 			$("#roundPlayer").modal("show");
 		});
 		
@@ -87,6 +88,7 @@
 			$("form#answerSubmission #roundNumber").val(2);
 			$("form#answerSubmission #levelScore").val($("form#playRound2 .level-select").val());
 			$("#modelHeadRoundNo").text("2");
+			$("#submitAnswer").toggleClass("disabled",true);
 			$("#roundPlayer").modal("show");
 			$("#Round2Card .level-play").toggleClass("disabled",true);
 		});
@@ -105,6 +107,7 @@
 			$("form#answerSubmission #roundNumber").val(3);
 			$("form#answerSubmission #levelScore").val($("form#playRound3 .level-select").val());
 			$("#modelHeadRoundNo").text("3");
+			$("#submitAnswer").toggleClass("disabled",true);
 			$("#roundPlayer").modal("show");
 			$("#Round3Card .level-play").toggleClass("disabled",true);
 		});
@@ -116,16 +119,22 @@
 				var player_image_url = "https://resources.premierleague.com/premierleague/photos/players/250x250/"+player_in_datalist.data("optaid")+".png";
 				$("#selectedPlayerImage").attr("src",player_image_url);
 				$("#playerSelect").toggleClass("is-invalid",false);
+				$("#submitAnswer").toggleClass("disabled",false);
 			} else {
 				// Invalid player name, show validation error
 				$("#selectedPlayerImage").attr("src","https://resources.premierleague.com/premierleague/photos/players/250x250/Photo-Missing.png");
 				$("#playerSelect").toggleClass("is-invalid",true);
+				$("#submitAnswer").toggleClass("disabled",true);
 			}
 		});
 		
 		// Player and year combo is selected
 		$("form#answerSubmission").submit(function(e){
 			e.preventDefault();
+			if (player_in_datalist = $("#allPremPlayers option[value='"+$("#playerSelect").val()+"']").length === 0) {
+				// Invalid player, return and don't submit
+				return;
+			}
 			var round_points = null;
 			var points_class = "";
 			var team_id = $("form#answerSubmission #team").val();
@@ -460,8 +469,11 @@
 						<input type="hidden" id="levelScore" value="">
 						<input type="hidden" id="team" value="">
 						<input type="hidden" id="ground" value="">
+						<div class="form-check" style="padding-left:0px;">
 						<label for="playerSelect" class="form-label fs-5">Player</label>
 						<input id="playerSelect" class="form-control form-control-md" type="text" list="allPremPlayers" placeholder="Search for a player" required>
+						<div class="invalid-feedback">Invalid player name. Check for capital letters or accents.</div>
+						</div>
 						<datalist id="allPremPlayers"></datalist>
 						<label for="seasonSelect" class="form-label fs-5">Season</label>
 						<select id="seasonSelect" class="form-select form-select-md mb-3" required>
