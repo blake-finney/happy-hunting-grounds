@@ -7,6 +7,11 @@
 	<link rel="icon" type="image/x-icon" href="favicon.svg">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 	<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+	<style>
+		.player-select-option:hover {
+			background-color: #AABBCC !important;
+		}
+	</style>
 	<script defer>
 	function reset_round () {
 		$("#answerContainer").toggleClass("d-none",true);
@@ -15,6 +20,7 @@
 		$("#playerSelect").val(null);
 		$("#seasonSelect").val(null);
 		$("#goalscorersHeader").text("Away Goalscorers");
+		$("#goalscorersHeader").toggleClass("d-none",false);
 		$("#otherSeasonsScored").text("");
 		$("#answerScoreline").text("");
 		$("#answerDate").text("");
@@ -24,9 +30,11 @@
 		$("#submitAnswer").toggleClass("d-none",false);
 		$("#closeAnswer").toggleClass("d-none",true);
 		$("#pointsContainer").toggleClass("alert-success",false).toggleClass("alert-info",false).toggleClass("alert-warning",false);
+		$("#allPremPlayers .searching-placeholder").toggleClass("d-none", false);
+		$('#allPremPlayers .player-select-option').toggleClass("d-none", true);
 	};
 	
-	var players, teams, grounds, answers;
+	var players, teams, grounds, answers, rounds_played = [];
 	
 	// Set up requests for data for Promise
 	var requests = [$.getJSON("https://raw.githubusercontent.com/blake-finney/happy-hunting-grounds/main/data/fixtures.json", function( data ) {
@@ -44,19 +52,28 @@
 	
 	Promise.all(requests).then(returned_data => {
 		// Set players
-		var players_dataset = $("#allPremPlayers");
-		for (const [key, data] of Object.entries(players)) {
+		var players_dataset = $("#allPremPlayers"), player_counter = 0, all_player_names = [];
+		Object.keys(players).sort(function (a, b) {var textA = players[a].displayName.toUpperCase();var textB = players[b].displayName.toUpperCase();return textA.localeCompare(textB);}).forEach(function (key) {
 			// Add player to datset
-			players_dataset.append('<option value="'+data.displayName+'" data-playerid="'+data.id+'" data-optaid="'+data.optaId+'">')
-		}
+			var data = players[key];
+			all_player_names.push(data.displayName);
+			players_dataset.append('<div tabindex="'+player_counter+'" class="player-select-option p-2 position-relative border border-dark-subtle shadow-sm bg-white d-none fs-6 align-middle" data-playerid="'+data.id+'" data-optaid="'+data.optaId+'" data-playername="'+data.displayName+'"><img width="30px" class="img-thumbnail me-2 p-0 align-middle" src="https://resources.premierleague.com/premierleague/photos/players/250x250/Photo-Missing.png" onerror="this.src=\'https://resources.premierleague.com/premierleague/photos/players/250x250/Photo-Missing.png\'"/><span class="align-middle fs-6">'+data.displayName+'</span></div>');
+			player_counter++;
+		})
 		function get_fixture_for_difficulty (level){
 			var level_answers = Object.fromEntries(
 				Object.entries(answers).filter(
-					([key, val])=>val.difficulty_score===Number(level)
+					([key, val])=>(val.difficulty_level===Number(level) || val.difficulty_score===Number(level))
 				)
 			);
-			var level_combos = Object.keys(level_answers);
-			return level_combos[Math.floor(Math.random() * level_combos.length)];
+			// Get possible rounds for this level, removing any that have been played (up to 100 rounds)
+			if (rounds_played.length > 100) {
+				rounds_played.shift();
+			}
+			var level_combos = Object.keys(level_answers).filter(function(round){return rounds_played.indexOf(round) === -1;});
+			var round_selected = level_combos[Math.floor(Math.random() * level_combos.length)];
+			rounds_played.push(round_selected);
+			return round_selected;
 		};
 		// Get rounds ready
 		$("form#playRound1").on("submit", function (e) {
@@ -67,9 +84,17 @@
 			$("#questionTeam").text(teams["team-"+fixture_split[1]].name);
 			$("form#answerSubmission #team").val(fixture_split[1]);
 			$("#questionGround").text(grounds[fixture_split[0]].name);
+			if (grounds[fixture_split[0]].also_known_as) {
+			// If we have otherwise known as, add tooltip for this
+				$("#questionGround").css({"text-decoration":"underline","text-decoration-style": "dotted", "cursor": "help"}).attr("data-bs-toggle","tooltip").attr("data-bs-placement","bottom").attr("data-bs-title", "Also known as: " + grounds[fixture_split[0]].also_known_as).tooltip();
+			} else {
+				// If not, clear any tooltip CSS
+				$("#questionGround").css({"text-decoration":"unset","text-decoration-style": "unset", "cursor": "unset"}).tooltip('dispose');
+			}
 			$("form#answerSubmission #ground").val(fixture_split[0]);
 			$("form#answerSubmission #roundNumber").val(1);
 			$("form#answerSubmission #levelScore").val($("form#playRound1 .level-select").val());
+			$("#submitAnswer").toggleClass("disabled",true);
 			$("#roundPlayer").modal("show");
 		});
 		
@@ -83,10 +108,18 @@
 			$("#questionTeam").text(teams["team-"+fixture_split[1]].name);
 			$("form#answerSubmission #team").val(fixture_split[1]);
 			$("#questionGround").text(grounds[fixture_split[0]].name);
+			if (grounds[fixture_split[0]].also_known_as) {
+			// If we have otherwise known as, add tooltip for this
+				$("#questionGround").css({"text-decoration":"underline","text-decoration-style": "dotted", "cursor": "help"}).attr("data-bs-toggle","tooltip").attr("data-bs-placement","bottom").attr("data-bs-title", "Also known as: " + grounds[fixture_split[0]].also_known_as).tooltip();
+			} else {
+				// If not, clear any tooltip CSS
+				$("#questionGround").css({"text-decoration":"unset","text-decoration-style": "unset", "cursor": "unset"}).tooltip('dispose');
+			}
 			$("form#answerSubmission #ground").val(fixture_split[0]);
 			$("form#answerSubmission #roundNumber").val(2);
 			$("form#answerSubmission #levelScore").val($("form#playRound2 .level-select").val());
 			$("#modelHeadRoundNo").text("2");
+			$("#submitAnswer").toggleClass("disabled",true);
 			$("#roundPlayer").modal("show");
 			$("#Round2Card .level-play").toggleClass("disabled",true);
 		});
@@ -101,25 +134,70 @@
 			$("#questionTeam").text(teams["team-"+fixture_split[1]].name);
 			$("form#answerSubmission #team").val(fixture_split[1]);
 			$("#questionGround").text(grounds[fixture_split[0]].name);
+			if (grounds[fixture_split[0]].also_known_as) {
+			// If we have otherwise known as, add tooltip for this
+				$("#questionGround").css({"text-decoration":"underline","text-decoration-style": "dotted", "cursor": "help"}).attr("data-bs-toggle","tooltip").attr("data-bs-placement","bottom").attr("data-bs-title", "Also known as: " + grounds[fixture_split[0]].also_known_as).tooltip();
+			} else {
+				// If not, clear any tooltip CSS
+				$("#questionGround").css({"text-decoration":"unset","text-decoration-style": "unset", "cursor": "unset"}).tooltip('dispose');
+			}
 			$("form#answerSubmission #ground").val(fixture_split[0]);
 			$("form#answerSubmission #roundNumber").val(3);
 			$("form#answerSubmission #levelScore").val($("form#playRound3 .level-select").val());
 			$("#modelHeadRoundNo").text("3");
+			$("#submitAnswer").toggleClass("disabled",true);
 			$("#roundPlayer").modal("show");
 			$("#Round3Card .level-play").toggleClass("disabled",true);
 		});
 		
+		// On focus for select, show filtered list of players
+		$("#playerSelect").on("focus", function () {
+			$("#allPremPlayers").toggleClass("d-none",false);
+		});
+		// Not in focus, hide filtered list of players
+		$("#playerSelect").on("focusout", function (event) {
+			var target = $(event.relatedTarget);
+			if (target.hasClass("player-select-option")){
+				$("#playerSelect").val(target.text());
+			}
+			$("#allPremPlayers").toggleClass("d-none",true);
+			$("#playerSelect").trigger("change");
+		});
+		
+		// On keyup for select, filter list of players
+		$("#playerSelect").on("keyup", function (event) {
+			var search_value = $("#playerSelect").val();
+			if (search_value.length < 2) {
+				// If number of character is below 2, show searching
+			} else {
+				$("#allPremPlayers .searching-placeholder").toggleClass("d-none", true);
+				$('#allPremPlayers .player-select-option').toggleClass("d-none", true);
+				// Filter the list
+				var filtered_list = all_player_names.filter(val => val.toUpperCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace("Ø","O").includes(search_value.toUpperCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace("Ø","O")));
+				// Sort the list by shortest names first, then cut down to top 5 results
+				filtered_list = filtered_list.sort((a, b) => a.length - b.length).slice(0,5);
+				// Now only show players whose name contains those
+				filtered_list.forEach(function (name) {
+					var player_div = $('#allPremPlayers .player-select-option[data-playername="'+name+'"]');
+					player_div.toggleClass("d-none",false)
+					player_div.find('img').attr('src','https://resources.premierleague.com/premierleague/photos/players/250x250/'+player_div.attr('data-optaid')+'.png');
+				});
+			}
+		});
+		
 		// Set up player thumbnail when player is changed
 		$("#playerSelect").on("change", function () {
-			var player_in_datalist = $("#allPremPlayers option[value='"+$("#playerSelect").val()+"']");
+			var player_in_datalist = $("#allPremPlayers div[data-playername='"+$("#playerSelect").val()+"']");
 			if (player_in_datalist.length) {
 				var player_image_url = "https://resources.premierleague.com/premierleague/photos/players/250x250/"+player_in_datalist.data("optaid")+".png";
 				$("#selectedPlayerImage").attr("src",player_image_url);
 				$("#playerSelect").toggleClass("is-invalid",false);
+				$("#submitAnswer").toggleClass("disabled",false);
 			} else {
 				// Invalid player name, show validation error
 				$("#selectedPlayerImage").attr("src","https://resources.premierleague.com/premierleague/photos/players/250x250/Photo-Missing.png");
 				$("#playerSelect").toggleClass("is-invalid",true);
+				$("#submitAnswer").toggleClass("disabled",true);
 			}
 		});
 		
@@ -131,7 +209,7 @@
 			var team_id = $("form#answerSubmission #team").val();
 			var stadium_slug = $("form#answerSubmission #ground").val();
 			var season_id = $("#seasonSelect").val();
-			var player_id = $("#allPremPlayers option[value='"+$("#playerSelect").val()+"']").data("playerid");
+			var player_id = $("#allPremPlayers div[data-playername='"+$("#playerSelect").val()+"']").data("playerid");
 			// Show answer details
 			$("#answerContainer").toggleClass("d-none",false);
 			// Check season selected
@@ -155,13 +233,13 @@
 							// Selected player did score
 							round_points = Number($("form#answerSubmission #levelScore").val());
 							points_class = "alert-success";
-							$("#answerGoalscorers").append('<p class="mb-0"><strong>'+players["player-" + goalscorer.id].displayName+ ((goalscorer.penalty) ? '(p)' : '') + ' ('+goalscorer.minute+')</strong></p>');
+							$("#answerGoalscorers").append('<p class="mb-0"><strong>'+players["player-" + goalscorer.id].displayName+ ((goalscorer.penalty) ? ' (p)' : '') + ', '+goalscorer.minute+'</strong></p>');
 						} else if (goalscorer.id.toString().indexOf('OG-')===0) {
 							// If goal is an own goal, display differently
-							$("#answerGoalscorers").append('<p class="mb-0"><i>'+players["player-" + goalscorer.id.replace('OG-','')].displayName+' OG ('+goalscorer.minute+')</i></p>');
+							$("#answerGoalscorers").append('<p class="mb-0"><i>'+players["player-" + goalscorer.id.replace('OG-','')].displayName+' (OG), '+goalscorer.minute+'</i></p>');
 						} else {
 							if ("player-" + goalscorer.id in players){
-								$("#answerGoalscorers").append('<p class="mb-0">'+players["player-" + goalscorer.id].displayName+ ((goalscorer.penalty) ? ' (p)' : '') + ' ('+goalscorer.minute+')</p>');
+								$("#answerGoalscorers").append('<p class="mb-0">'+players["player-" + goalscorer.id].displayName+ ((goalscorer.penalty) ? ' (p)' : '') + ', '+goalscorer.minute+'</p>');
 							} else {
 								// Rare edge cases where goalscorer ID doesn't have a player associated
 								$("#answerGoalscorers").append("<p class=\"mb-0\">Error! Couldn't find Player ID " + goalscorer.id + "</p>");
@@ -170,6 +248,7 @@
 					}
 				} else {
 					// Away team no goalscorers
+					$("#goalscorersHeader").toggleClass("d-none",true);
 				}
 			}
 			
@@ -267,6 +346,8 @@
 			$("#restartGame").toggleClass("d-none", true);
 		});
 	});
+	// Clean up requests for memory sake
+	requests = [];
 	</script>
   </head>
   <body style="background:linear-gradient(0deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url(football_pitch.jpg); background-size: cover; background-position: center;">
@@ -424,22 +505,34 @@
 			<div class="h3">Notes</div>
 			<div class="p1"><ul>
 				<li>This is not affiliated with the Football Cliches podcast. This has been created by a fan of the pod.</li>
-				<li>The difficulty level is currently based on the number of possible unique answer combinations for that team and stadium, and how recent the most recent answer is.</li>
-				<li style="margin-left: 2em;">A Level 1 example might be Manchester United at Goodison Park, the combination with the most unqiue goalscorers.</li>
-				<li style="margin-left: 2em;">A Level 10 example might be Manchester City at Boundary Park, where there is only one correct goalscorer.</li>
+				<li>The difficulty level is currently based on possible answers, PL goals scored by the players who are answers, total seasons the fixture happened, and most recent season.</li>
 				<li>Data is accurate as of the end of the 2023/34 season. The 2024/25 season will be added some time after the conclusion of the season.</li>
-				<li>Names in the player input contain the correct accents as per their name on the Premier League website. So if you search without accents, the player won't show.</li>
-				<li style="margin-left: 2em;">This is something I want to improve at some point, so it shows with accents, but you can search for either.</li>
+				<li>Names in the player input contain the correct accents as per their name on the Premier League website.</li>
 				<li>Disclaimer: I do not own the rights to the Premier League player headshots, these are hosted on the Premier League's website.</li>
 			</ul></div>
 		</div>
-		<!-- Notes section -->
+		<!-- Feedback section -->
 		<div class="container-xxl">
 			<div class="h3">Feedback</div>
 			<div class="p1"><ul>
 				<li>If you have any feedback or have any issues with this Web app, do one of the following:</li>
 				<li style="margin-left: 2em;">Log it on the <a href="https://github.com/blake-finney/happy-hunting-grounds/issues" target="_blank">GitHub repository's Issues section</a>.</li>
 				<li style="margin-left: 2em;">Drop me a tweet or message on Twitter/X <a href="https://x.com/FinneyBlake" target="_blank">@FinneyBlake</a>.</li>
+			</ul></div>
+		</div>
+		<!-- Release notes section -->
+		<div class="container-xxl">
+			<div class="h3">Most recent updates</div>
+			<div class="p1"><ul>
+				<li>The difficulty levels have been re-worked to account for: possible answers, total PL goals for the players who scored, number of seasons that fixture happened, and most recent season it happened.</li>
+				<li>Player search is improved!</li>
+				<li style="margin-left: 2em;">You can now search with or without player accents, and it will return the player.</li>
+				<li style="margin-left: 2em;">Search is sorted alphabertically, and shortest names first. #JusticeForJô</li>
+				<li style="margin-left: 2em;">This also contains a few more players, and includes small icons for the headshots too</li>
+				<li>Once you play a round, that won't appear again for 100 rounds unless you refresh the page.</li>
+				<li>For some grounds, a helper has been added to show names it has otherwise been known as. Thanks, Toughsheet Community Stadium.</li>
+				<li>You now won't be able to submit invalid names, so you have to use a valid name before selecting your answer.</li>
+				
 			</ul></div>
 		</div>
 		<!-- Round Player Modal Section -->
@@ -460,9 +553,14 @@
 						<input type="hidden" id="levelScore" value="">
 						<input type="hidden" id="team" value="">
 						<input type="hidden" id="ground" value="">
-						<label for="playerSelect" class="form-label fs-5">Player</label>
-						<input id="playerSelect" class="form-control form-control-md" type="text" list="allPremPlayers" placeholder="Search for a player" required>
-						<datalist id="allPremPlayers"></datalist>
+						<div class="form-check" style="padding-left:0px;">
+							<label for="playerSelect" class="form-label fs-5">Player</label>
+							<input id="playerSelect" class="form-control form-control-md" type="text" autocomplete="off" placeholder="Search for a player" required>
+							<div class="position-relative">
+								<div id="allPremPlayers" class="position-absolute d-none" style="z-index: 1800; cursor: pointer; width:100%;"><div class="searching-placeholder p-2 position-relative border border-dark-subtle shadow-sm bg-white">Searching...</div></div>
+							</div>
+							<div class="invalid-feedback">Invalid player name. Check for capital letters or accents.</div>
+						</div>
 						<label for="seasonSelect" class="form-label fs-5">Season</label>
 						<select id="seasonSelect" class="form-select form-select-md mb-3" required>
 							<option value="" disabled selected>Select season</option>
