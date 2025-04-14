@@ -32,6 +32,7 @@
 		$("#pointsContainer").toggleClass("alert-success",false).toggleClass("alert-info",false).toggleClass("alert-warning",false);
 		$("#allPremPlayers .searching-placeholder").toggleClass("d-none", false);
 		$('#allPremPlayers .player-select-option').toggleClass("d-none", true);
+		$("#questionGround").css({"text-decoration":"unset","text-decoration-style": "unset", "cursor": "unset"}).tooltip('dispose');
 	};
 	
 	var players, teams, grounds, answers, rounds_played = [];
@@ -78,6 +79,7 @@
 		// Get rounds ready
 		$("form#playRound1").on("submit", function (e) {
 			e.preventDefault();
+			reset_round();
 			// Initialise first round
 			var selected_fixture = get_fixture_for_difficulty($("form#playRound1 .level-select").val());
 			var fixture_split = selected_fixture.split('_');
@@ -87,9 +89,6 @@
 			if (grounds[fixture_split[0]].also_known_as) {
 			// If we have otherwise known as, add tooltip for this
 				$("#questionGround").css({"text-decoration":"underline","text-decoration-style": "dotted", "cursor": "help"}).attr("data-bs-toggle","tooltip").attr("data-bs-placement","bottom").attr("data-bs-title", "Also known as: " + grounds[fixture_split[0]].also_known_as).tooltip();
-			} else {
-				// If not, clear any tooltip CSS
-				$("#questionGround").css({"text-decoration":"unset","text-decoration-style": "unset", "cursor": "unset"}).tooltip('dispose');
 			}
 			$("form#answerSubmission #ground").val(fixture_split[0]);
 			$("form#answerSubmission #roundNumber").val(1);
@@ -111,9 +110,6 @@
 			if (grounds[fixture_split[0]].also_known_as) {
 			// If we have otherwise known as, add tooltip for this
 				$("#questionGround").css({"text-decoration":"underline","text-decoration-style": "dotted", "cursor": "help"}).attr("data-bs-toggle","tooltip").attr("data-bs-placement","bottom").attr("data-bs-title", "Also known as: " + grounds[fixture_split[0]].also_known_as).tooltip();
-			} else {
-				// If not, clear any tooltip CSS
-				$("#questionGround").css({"text-decoration":"unset","text-decoration-style": "unset", "cursor": "unset"}).tooltip('dispose');
 			}
 			$("form#answerSubmission #ground").val(fixture_split[0]);
 			$("form#answerSubmission #roundNumber").val(2);
@@ -137,9 +133,6 @@
 			if (grounds[fixture_split[0]].also_known_as) {
 			// If we have otherwise known as, add tooltip for this
 				$("#questionGround").css({"text-decoration":"underline","text-decoration-style": "dotted", "cursor": "help"}).attr("data-bs-toggle","tooltip").attr("data-bs-placement","bottom").attr("data-bs-title", "Also known as: " + grounds[fixture_split[0]].also_known_as).tooltip();
-			} else {
-				// If not, clear any tooltip CSS
-				$("#questionGround").css({"text-decoration":"unset","text-decoration-style": "unset", "cursor": "unset"}).tooltip('dispose');
 			}
 			$("form#answerSubmission #ground").val(fixture_split[0]);
 			$("form#answerSubmission #roundNumber").val(3);
