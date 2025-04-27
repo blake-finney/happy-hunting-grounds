@@ -93,6 +93,7 @@
 			$("form#answerSubmission #ground").val(fixture_split[0]);
 			$("form#answerSubmission #roundNumber").val(1);
 			$("form#answerSubmission #levelScore").val($("form#playRound1 .level-select").val());
+			$("#modelHeadRoundNo").text("1");
 			$("#submitAnswer").toggleClass("disabled",true);
 			$("#roundPlayer").modal("show");
 		});
