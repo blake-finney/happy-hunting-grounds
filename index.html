@@ -181,7 +181,7 @@
 		
 		// Set up player thumbnail when player is changed
 		$("#playerSelect").on("change", function () {
-			var player_in_datalist = $("#allPremPlayers div[data-playername='"+$("#playerSelect").val()+"']");
+			var player_in_datalist = $("#allPremPlayers div[data-playername=\""+$("#playerSelect").val()+"\"]");
 			if (player_in_datalist.length) {
 				var player_image_url = "https://resources.premierleague.com/premierleague/photos/players/250x250/"+player_in_datalist.data("optaid")+".png";
 				$("#selectedPlayerImage").attr("src",player_image_url);
@@ -203,7 +203,8 @@
 			var team_id = $("form#answerSubmission #team").val();
 			var stadium_slug = $("form#answerSubmission #ground").val();
 			var season_id = $("#seasonSelect").val();
-			var player_id = $("#allPremPlayers div[data-playername='"+$("#playerSelect").val()+"']").data("playerid");
+			debugger;
+			var player_id = $("#allPremPlayers div[data-playername=\""+$("#playerSelect").val()+"\"]").data("playerid");
 			// Show answer details
 			$("#answerContainer").toggleClass("d-none",false);
 			// Check season selected
