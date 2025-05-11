@@ -19,6 +19,7 @@
 		$("#seasonSelect").prop("disabled",false);
 		$("#playerSelect").val(null);
 		$("#seasonSelect").val(null);
+		$("#seasonSelect option").toggleClass("d-none",false);
 		$("#goalscorersHeader").text("Away Goalscorers");
 		$("#goalscorersHeader").toggleClass("d-none",false);
 		$("#otherSeasonsScored").text("");
@@ -35,7 +36,7 @@
 		$("#questionGround").css({"text-decoration":"unset","text-decoration-style": "unset", "cursor": "unset"}).tooltip('dispose');
 	};
 	
-	var players, teams, grounds, answers, rounds_played = [];
+	var players, teams, grounds, answers, rounds_played = [], sicko_rounds_played = [];
 	
 	// Set up requests for data for Promise
 	var requests = [$.getJSON("https://raw.githubusercontent.com/blake-finney/happy-hunting-grounds/main/data/fixtures.json", function( data ) {
@@ -62,28 +63,58 @@
 			player_counter++;
 		})
 		function get_fixture_for_difficulty (level){
-			var level_answers = Object.fromEntries(
-				Object.entries(answers).filter(
-					([key, val])=>(val.difficulty_level===Number(level) || val.difficulty_score===Number(level))
-				)
-			);
-			// Get possible rounds for this level, removing any that have been played (up to 100 rounds)
-			if (rounds_played.length > 100) {
-				rounds_played.shift();
+			var game_mode = $("#selectGameMode option:selected").val();
+			var level_answers,level_combos, round_selected;
+			if (game_mode === "sicko"){
+				// Sicko mode
+				level_answers = Object.fromEntries(
+					Object.entries(answers).filter(
+						([key, val])=>(val.sicko_level===Number(level))
+					)
+				);
+				// Get possible rounds for this sicko level, removing any that have been played (up to 30 rounds)
+				if (sicko_rounds_played.length > 30) {
+					sicko_rounds_played.shift();
+				}
+				level_combos = Object.keys(level_answers).filter(function(round){return sicko_rounds_played.indexOf(round) === -1;});
+				round_selected = level_combos[Math.floor(Math.random() * level_combos.length)];
+				sicko_rounds_played.push(round_selected);
+			} else {
+				// Classic mode
+				level_answers = Object.fromEntries(
+					Object.entries(answers).filter(
+						([key, val])=>(val.difficulty_level===Number(level))
+					)
+				);
+				// Get possible rounds for this level, removing any that have been played (up to 100 rounds)
+				if (rounds_played.length > 100) {
+					rounds_played.shift();
+				}
+				level_combos = Object.keys(level_answers).filter(function(round){return rounds_played.indexOf(round) === -1;});
+				round_selected = level_combos[Math.floor(Math.random() * level_combos.length)];
+				rounds_played.push(round_selected);
 			}
-			var level_combos = Object.keys(level_answers).filter(function(round){return rounds_played.indexOf(round) === -1;});
-			var round_selected = level_combos[Math.floor(Math.random() * level_combos.length)];
-			rounds_played.push(round_selected);
 			return round_selected;
+		};
+		function set_up_easy_mode(selected_fixture) {
+			// Hide all seasons
+			$("#seasonSelect option").toggleClass("d-none",true);
+			var seasons = answers[selected_fixture].seasons;
+			for (var season in seasons){
+				var season_split = season.split("-");
+				$("#seasonSelect option[value='"+season_split[1]+"']").toggleClass("d-none",false);
+			}
 		};
 		// Get rounds ready
 		$("form#playRound1").on("submit", function (e) {
 			e.preventDefault();
 			reset_round();
+			// Disable game mode selector
+			$("#selectGameMode").prop("disabled",true);
 			// Initialise first round
 			var selected_fixture = get_fixture_for_difficulty($("form#playRound1 .level-select").val());
 			var fixture_split = selected_fixture.split('_');
-			$("#questionTeam").text(teams["team-"+fixture_split[1]].name);
+			$("#questionTeam").text(teams["team-"+fixture_split[1]].name).attr("data-team-id",fixture_split[1]);
 			$("form#answerSubmission #team").val(fixture_split[1]);
 			$("#questionGround").text(grounds[fixture_split[0]].name);
 			if (grounds[fixture_split[0]].also_known_as) {
@@ -95,6 +126,9 @@
 			$("form#answerSubmission #levelScore").val($("form#playRound1 .level-select").val());
 			$("#modelHeadRoundNo").text("1");
 			$("#submitAnswer").toggleClass("disabled",true);
+			if ($("#selectGameMode option:selected").val() == "easy"){
+				set_up_easy_mode(selected_fixture);
+			}
 			$("#roundPlayer").modal("show");
 		});
 		
@@ -105,7 +139,7 @@
 			// Initialise second round
 			var selected_fixture = get_fixture_for_difficulty($("form#playRound2 .level-select").val());
 			var fixture_split = selected_fixture.split('_');
-			$("#questionTeam").text(teams["team-"+fixture_split[1]].name);
+			$("#questionTeam").text(teams["team-"+fixture_split[1]].name).attr("data-team-id",fixture_split[1]);
 			$("form#answerSubmission #team").val(fixture_split[1]);
 			$("#questionGround").text(grounds[fixture_split[0]].name);
 			if (grounds[fixture_split[0]].also_known_as) {
@@ -117,6 +151,9 @@
 			$("form#answerSubmission #levelScore").val($("form#playRound2 .level-select").val());
 			$("#modelHeadRoundNo").text("2");
 			$("#submitAnswer").toggleClass("disabled",true);
+			if ($("#selectGameMode option:selected").val() == "easy"){
+				set_up_easy_mode(selected_fixture);
+			}
 			$("#roundPlayer").modal("show");
 			$("#Round2Card .level-play").toggleClass("disabled",true);
 		});
@@ -128,7 +165,7 @@
 			// Initialise third round
 			var selected_fixture = get_fixture_for_difficulty($("form#playRound3 .level-select").val());
 			var fixture_split = selected_fixture.split('_');
-			$("#questionTeam").text(teams["team-"+fixture_split[1]].name);
+			$("#questionTeam").text(teams["team-"+fixture_split[1]].name).attr("data-team-id",fixture_split[1]);
 			$("form#answerSubmission #team").val(fixture_split[1]);
 			$("#questionGround").text(grounds[fixture_split[0]].name);
 			if (grounds[fixture_split[0]].also_known_as) {
@@ -140,6 +177,9 @@
 			$("form#answerSubmission #levelScore").val($("form#playRound3 .level-select").val());
 			$("#modelHeadRoundNo").text("3");
 			$("#submitAnswer").toggleClass("disabled",true);
+			if ($("#selectGameMode option:selected").val() == "easy"){
+				set_up_easy_mode(selected_fixture);
+			}
 			$("#roundPlayer").modal("show");
 			$("#Round3Card .level-play").toggleClass("disabled",true);
 		});
@@ -168,6 +208,12 @@
 				$('#allPremPlayers .player-select-option').toggleClass("d-none", true);
 				// Filter the list
 				var filtered_list = all_player_names.filter(val => val.toUpperCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace("Ø","O").includes(search_value.toUpperCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace("Ø","O")));
+				if ($("#selectGameMode option:selected").val() == "easy"){
+					// If easy mode, filter further if player is in all prem goalscorers for team
+					var scorer_names = [];
+					teams["team-"+$("#questionTeam").attr("data-team-id")].all_prem_goalscorers.forEach((scorer_id) => scorer_names.push((players["player-"+scorer_id] || {}).displayName))
+					filtered_list = filtered_list.filter(val => scorer_names.indexOf(val) > -1);
+				}
 				// Sort the list by shortest names first, then cut down to top 5 results
 				filtered_list = filtered_list.sort((a, b) => a.length - b.length).slice(0,5);
 				// Now only show players whose name contains those
@@ -203,8 +249,8 @@
 			var team_id = $("form#answerSubmission #team").val();
 			var stadium_slug = $("form#answerSubmission #ground").val();
 			var season_id = $("#seasonSelect").val();
-			debugger;
 			var player_id = $("#allPremPlayers div[data-playername=\""+$("#playerSelect").val()+"\"]").data("playerid");
+			var game_mode = $("#selectGameMode option:selected").val();
 			// Show answer details
 			$("#answerContainer").toggleClass("d-none",false);
 			// Check season selected
@@ -234,7 +280,12 @@
 							$("#answerGoalscorers").append('<p class="mb-0"><i>'+players["player-" + goalscorer.id.replace('OG-','')].displayName+' (OG), '+goalscorer.minute+'</i></p>');
 						} else {
 							if ("player-" + goalscorer.id in players){
-								$("#answerGoalscorers").append('<p class="mb-0">'+players["player-" + goalscorer.id].displayName+ ((goalscorer.penalty) ? ' (p)' : '') + ', '+goalscorer.minute+'</p>');
+								if (game_mode === "sicko"){
+									// For sicko mode, hide other goalscorer when not guessed
+									$("#answerGoalscorers").append('<p style="width: 80%;" class="mb-0 placeholder placeholder-wave">'+players["player-" + goalscorer.id].displayName+ ((goalscorer.penalty) ? ' (p)' : '') + ', '+goalscorer.minute+'</p>');
+								} else {
+									$("#answerGoalscorers").append('<p class="mb-0">'+players["player-" + goalscorer.id].displayName+ ((goalscorer.penalty) ? ' (p)' : '') + ', '+goalscorer.minute+'</p>');
+								}
 							} else {
 								// Rare edge cases where goalscorer ID doesn't have a player associated
 								$("#answerGoalscorers").append("<p class=\"mb-0\">Error! Couldn't find Player ID " + goalscorer.id + "</p>");
@@ -253,11 +304,16 @@
 					// Player has scored there in another season
 					round_points = Number($("form#answerSubmission #levelScore").val())/2;
 					points_class = "alert-info";
-					// Display other seasons they scored in, sorted oldest season to most recent
-					var other_seasons = grounds[stadium_slug].away_goalscorers["player-"+player_id+"_team-"+team_id];
-					other_seasons.sort(function(a, b){return a - b});
-					other_seasons = other_seasons.map(x => $('#seasonSelect option[value="'+x+'"]').text());
-					$("#otherSeasonsScored").text("Seasons " + $("#playerSelect").val() +" scored for "+$("#questionTeam").text()+" at " +$("#questionGround").text()+ " in the Premier League: " + other_seasons.join(", "));
+					if (game_mode === "sicko"){
+						// For Sicko mode, tell user they got the right player, but don't give the season
+						$("#otherSeasonsScored").text($("#playerSelect").val() +" scored for "+$("#questionTeam").text()+" at " +$("#questionGround").text()+ " in the Premier League in a different season.");
+					} else {
+					// For Classic, display other seasons they scored in, sorted oldest season to most recent
+						var other_seasons = grounds[stadium_slug].away_goalscorers["player-"+player_id+"_team-"+team_id];
+						other_seasons.sort(function(a, b){return a - b});
+						other_seasons = other_seasons.map(x => $('#seasonSelect option[value="'+x+'"]').text());
+						$("#otherSeasonsScored").text("Seasons " + $("#playerSelect").val() +" scored for "+$("#questionTeam").text()+" at " +$("#questionGround").text()+ " in the Premier League: " + other_seasons.join(", "));
+					}
 				} else {
 					// Player has not scored at that ground for that team, no points
 					round_points = 0;
@@ -329,6 +385,8 @@
 			$(".round-score .question").text("");
 			$(".round-score .guess strong").text("");
 			$(".share_row_score").toggleClass("alert-success",false).toggleClass("alert-info",false).toggleClass("alert-warning",false);
+			// Re-enable game mode selector
+			$("#selectGameMode").prop("disabled",false);
 			// Clear total score
 			$("#totalScore").text("0");
 			// Re-enable Round 1
@@ -349,6 +407,11 @@
     <nav class="navbar navbar-expand-lg bg-primary">
 		<div class="container-fluid">
 			<div class="h2 light-text-emphasis text-light">Happy Hunting Grounds</div>
+			<select id="selectGameMode" class="form-select" aria-label="Select a game mode" style="width: 200px;">
+			  <option selected value="classic">Classic Mode</option>
+			  <option value="easy">Easy Mode</option>
+			  <option value="sicko">Sicko Mode</option>
+			</select>
 		</div>
 	</nav>
 	<div class="container-xxl">
@@ -493,6 +556,16 @@
 				<li>You must answer with a player that you think they scored at that ground for that team, as well as a season you think they scored in.</li>
 				<li>If you get the player and season correct, you score points equal to the level you chose.</li>
 				<li>If you choose a player that has scored at that stadium for that team, but not in the season you chose, you score half the points of the level you chose.</li>
+			</ul></div>
+		</div>
+		<!-- Game Modes section -->
+		<div class="container-xxl">
+			<div class="h3">NEW! Choose a game mode</div>
+			<div class="p1"><ul>
+				<li>There are now three different game modes available for you to choose from in the top right:</li>
+				<li style="margin-left: 2em;">Classic: The original HHG. No modifications to the usual rules on the podcast.</li>
+				<li style="margin-left: 2em;">Easy: The levels are the same, but when choosing an answer, only players who have scored for that team will show in the player search and only seasons where that team played at that stadium will show in the dropdown.</li>
+				<li style="margin-left: 2em;">Sicko: This mode only has team and ground combinations with one possible answer. The levels are based on how many total Premier League goals the player who is the answer scored. e.g. if the only answer is Alan Shearer, this would be Level 1.</li>
 			</ul></div>
 		</div>
 		<!-- Notes section -->
