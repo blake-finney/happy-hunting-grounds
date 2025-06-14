@@ -73,7 +73,7 @@
 					)
 				);
 				// Get possible rounds for this sicko level, removing any that have been played (up to 30 rounds)
-				if (sicko_rounds_played.length > 30) {
+				if (sicko_rounds_played.length > 25) {
 					sicko_rounds_played.shift();
 				}
 				level_combos = Object.keys(level_answers).filter(function(round){return sicko_rounds_played.indexOf(round) === -1;});
@@ -407,7 +407,7 @@
     <nav class="navbar navbar-expand-lg bg-primary">
 		<div class="container-fluid">
 			<div class="h2 light-text-emphasis text-light">Happy Hunting Grounds</div>
-			<select id="selectGameMode" class="form-select" aria-label="Select a game mode" style="width: 200px;">
+			<select id="selectGameMode" class="form-select" aria-label="Select a game mode" style="width: 175px;">
 			  <option selected value="classic">Classic Mode</option>
 			  <option value="easy">Easy Mode</option>
 			  <option value="sicko">Sicko Mode</option>
@@ -566,6 +566,7 @@
 				<li style="margin-left: 2em;">Classic: The original HHG. No modifications to the usual rules on the podcast.</li>
 				<li style="margin-left: 2em;">Easy: The levels are the same, but when choosing an answer, only players who have scored for that team will show in the player search and only seasons where that team played at that stadium will show in the dropdown.</li>
 				<li style="margin-left: 2em;">Sicko: This mode only has team and ground combinations with one possible answer. The levels are based on how many total Premier League goals the player who is the answer scored. e.g. if the only answer is Alan Shearer, this would be Level 1.</li>
+				<li>You can choose the mode in the top right of the page. Once you select a mode, it's locked in for all three rounds.</li>
 			</ul></div>
 		</div>
 		<!-- Notes section -->
@@ -574,7 +575,7 @@
 			<div class="p1"><ul>
 				<li>This is not affiliated with the Football Cliches podcast. This has been created by a fan of the pod.</li>
 				<li>The difficulty level is currently based on possible answers, PL goals scored by the players who are answers, total seasons the fixture happened, and most recent season.</li>
-				<li>Data is accurate as of the end of the 2023/34 season. The 2024/25 season will be added some time after the conclusion of the season.</li>
+				<li>Data is accurate as of the end of the 2024/25 season. The 2025/26 season will be added some time after the conclusion of the season.</li>
 				<li>Names in the player input contain the correct accents as per their name on the Premier League website.</li>
 				<li>Disclaimer: I do not own the rights to the Premier League player headshots, these are hosted on the Premier League's website.</li>
 			</ul></div>
@@ -592,12 +593,13 @@
 		<div class="container-xxl">
 			<div class="h3">Most recent updates</div>
 			<div class="p1"><ul>
+				<li><b>2024/25 season data has now been added!</b> This will have tweaked some of the difficulty scores, for example, games involving Ipswich may now be lower levels now they have a recent season in the top flight.</li>
 				<li>The difficulty levels have been re-worked to account for: possible answers, total PL goals for the players who scored, number of seasons that fixture happened, and most recent season it happened.</li>
 				<li>Player search is improved!</li>
 				<li style="margin-left: 2em;">You can now search with or without player accents, and it will return the player.</li>
 				<li style="margin-left: 2em;">Search is sorted alphabertically, and shortest names first. #JusticeForJô</li>
 				<li style="margin-left: 2em;">This also contains a few more players, and includes small icons for the headshots too</li>
-				<li>Once you play a round, that won't appear again for 100 rounds unless you refresh the page.</li>
+				<li>Once you play a round, that won't appear again for 100 rounds (25 for Sicko mode) unless you refresh the page.</li>
 				<li>For some grounds, a helper has been added to show names it has otherwise been known as. Thanks, Toughsheet Community Stadium.</li>
 				<li>You now won't be able to submit invalid names, so you have to use a valid name before selecting your answer.</li>
 				
@@ -664,6 +666,7 @@
 							<option value="418">2021/2022</option>
 							<option value="489">2022/2023</option>
 							<option value="578">2023/2024</option>
+							<option value="719">2024/2025</option>
 						</select>
 					</form>
 				</div>
